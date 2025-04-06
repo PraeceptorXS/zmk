@@ -16,7 +16,7 @@
 #endif
 
 const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_BOLT uint8_t bolt_map[] = {
-#if CONFIG_NICE_VIEW_WIDGET_INVERTED
+#if CONFIG_CUSTOM_WIDGET_INVERTED
     0x00, 0x00, 0x00, 0x00, /*Color of index 0*/
     0x00, 0x00, 0x00, 0xff, /*Color of index 1*/
     0xff, 0xff, 0xff, 0xff, /*Color of index 2*/

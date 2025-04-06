@@ -9,22 +9,14 @@
 #include "util.h"
 
 LV_IMG_DECLARE(bolt);
+// static lv_color_t cbuf_tmp[DISP_WIDTH * DISP_WIDTH];
 
 void rotate_canvas(lv_obj_t *canvas, lv_color_t cbuf[]) {
-    static lv_color_t cbuf_tmp[CANVAS_SIZE * CANVAS_SIZE];
-    memcpy(cbuf_tmp, cbuf, sizeof(cbuf_tmp));
-    lv_img_dsc_t img;
-    img.data = (void *)cbuf_tmp;
-    img.header.cf = LV_IMG_CF_TRUE_COLOR;
-    img.header.w = CANVAS_SIZE;
-    img.header.h = CANVAS_SIZE;
-
-    lv_canvas_fill_bg(canvas, LVGL_BACKGROUND, LV_OPA_COVER);
-    lv_canvas_transform(canvas, &img, 900, LV_IMG_ZOOM_NONE, -1, 0, CANVAS_SIZE / 2,
-                        CANVAS_SIZE / 2, true);
+    lv_img_set_pivot(canvas, 0, 0);
+    lv_img_set_angle(canvas, 900);
 }
 
-void draw_battery(lv_obj_t *canvas, const struct status_state *state) {
+void draw_battery(lv_obj_t *canvas, struct status_state state) {
     lv_draw_rect_dsc_t rect_black_dsc;
     init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
     lv_draw_rect_dsc_t rect_white_dsc;
@@ -32,11 +24,11 @@ void draw_battery(lv_obj_t *canvas, const struct status_state *state) {
 
     lv_canvas_draw_rect(canvas, 0, 2, 29, 12, &rect_white_dsc);
     lv_canvas_draw_rect(canvas, 1, 3, 27, 10, &rect_black_dsc);
-    lv_canvas_draw_rect(canvas, 2, 4, (state->battery + 2) / 4, 8, &rect_white_dsc);
+    lv_canvas_draw_rect(canvas, 2, 4, (state.battery + 2) / 4, 8, &rect_white_dsc);
     lv_canvas_draw_rect(canvas, 30, 5, 3, 6, &rect_white_dsc);
     lv_canvas_draw_rect(canvas, 31, 6, 1, 4, &rect_black_dsc);
 
-    if (state->charging) {
+    if (state.charging) {
         lv_draw_img_dsc_t img_dsc;
         lv_draw_img_dsc_init(&img_dsc);
         lv_canvas_draw_img(canvas, 9, -1, &bolt, &img_dsc);

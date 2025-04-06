@@ -14,9 +14,11 @@
 struct zmk_widget_status {
     sys_snode_t node;
     lv_obj_t *obj;
-    lv_color_t cbuf[CANVAS_SIZE * CANVAS_SIZE];
-    lv_color_t cbuf2[CANVAS_SIZE * CANVAS_SIZE];
-    lv_color_t cbuf3[CANVAS_SIZE * CANVAS_SIZE];
+    lv_color_t battery_buf[DISP_WIDTH * BATTERY_HEIGHT];
+    lv_color_t wpm_buf[DISP_WIDTH * WPM_HEIGHT];
+    lv_color_t bt_prof_buf[DISP_WIDTH * MODS_HEIGHT];
+    lv_color_t mods_buf[DISP_WIDTH * MODS_HEIGHT];
+    lv_color_t layer_buf[DISP_WIDTH * LAYER_HEIGHT];
     struct status_state state;
 };
 

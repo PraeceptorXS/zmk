@@ -7,50 +7,397 @@
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/outputs.h>
+#include <dt-bindings/zmk/ext_power.h>
+
+#define COMBO_TIMEOUT 75
+#define FAST_COMBO_TIMEOUT 65
+// Cleaning up long code segments
+#define COMBO(NAME, KEYS, MAPPING, LAYERS, DELAY, IDLE) combo_ ## NAME { \
+            timeout-ms = <DELAY>; \
+            key-positions = <KEYS>; \
+            bindings = <MAPPING>; \
+            require-prior-idle-ms = <IDLE> ; \
+            layers = <LAYERS>; \
+        };
+
+#define MOD_MORPH(NAME, KEY1, KEY2, MODS) NAME: NAME { \
+            compatible = "zmk,behavior-mod-morph"; \
+            label = # NAME; \
+            #binding-cells = <0>; \
+            bindings = <KEY1>, <KEY2>; \
+            mods = MODS; \
+        };
+#define MM_REPEAT(NAME, KEY) NAME: NAME { \
+            compatible = "zmk,behavior-mod-morph"; \
+            label = # NAME; \
+            #binding-cells = <0>; \
+            bindings = <&kp KEY>, <&repeat_key KEY>; \
+            mods = LRSFT; \
+        };
+
+#define LRSFT <(MOD_LSFT|MOD_RSFT)>
+
+#define MACRO(NAME, ...) ZMK_MACRO(NAME, \
+  wait-ms = <5>; \
+  tap-ms = <5>; \
+  bindings = __VA_ARGS__;)
+#define PRESS(KEY) <&macro_press KEY>
+#define RELEASE(KEY) <&macro_release KEY>
+#define TAP(KEY) <&macro_tap KEY>
+#define CAPS_LAYER(STR_NAME, SPACE_KEY, LAYER_NUM) layer_ ## LAYER_NUM { \
+      label = STR_NAME;\
+      bindings = <\
+        &kp Q &kp W &kp F &kp P &kp B  &kp J &kp L &kp U &kp Y &kp SQT     \
+        &kp A &kp R &kp S &kp T &kp G  &kp M &kp N &kp E &kp I &kp O \
+        &kp Z &kp X &kp C &kp D &kp V  &kp K &kp H &kp COMMA  &kp DOT  &kp FSLH    \
+        &tog LAYER_NUM &lt LOWER TAB &mt LSHFT BKSP SPACE_KEY &lt RAISE SEMI &mt RSFT RET\
+      >;\
+    };
+// layers
+#define MAC   0
+#define WIN   1
+#define SNAKE 2
+#define CAMEL 3
+#define PATH  4
+#define KEBAB 5
+#define LOWER 6
+#define RAISE 7
+#define FUNCT 8
+#define GAME  9
+
+&mt {
+  compatible = "zmk,behavior-hold-tap";
+  tapping-term-ms = <100>;
+  quick_tap_ms = <200>;
+  flavor = "balanced";
+};
+
+&lt {
+  compatible = "zmk,behavior-hold-tap";
+  tapping-term-ms = <110>;
+  quick_tap_ms = <200>;
+  flavor = "balanced";
+};
 
 / {
-        keymap {
-                compatible = "zmk,keymap";
-
-                default_layer {
-// -----------------------------------------------------------------------------------------
-// |  TAB |  Q  |  W  |  E  |  R  |  T  |   |  Y  |  U   |  I  |  O  |  P  | BKSP |
-// | CTRL |  A  |  S  |  D  |  F  |  G  |   |  H  |  J   |  K  |  L  |  ;  |  '   |
-// | SHFT |  Z  |  X  |  C  |  V  |  B  |   |  N  |  M   |  ,  |  .  |  /  | ESC  |
-//                    | GUI | LWR | SPC |   | ENT | RSE  | ALT |
-                        bindings = <
-   &kp TAB   &kp Q &kp W &kp E &kp R &kp T   &kp Y &kp U  &kp I     &kp O   &kp P    &kp BSPC
-   &kp LCTRL &kp A &kp S &kp D &kp F &kp G   &kp H &kp J  &kp K     &kp L   &kp SEMI &kp SQT
-   &kp LSHFT &kp Z &kp X &kp C &kp V &kp B   &kp N &kp M  &kp COMMA &kp DOT &kp FSLH &kp ESC
-                  &kp LGUI &mo 1 &kp SPACE   &kp RET &mo 2 &kp RALT
-                        >;
-                };
-                lower_layer {
-// -----------------------------------------------------------------------------------------
-// |  TAB |  1  |  2  |  3  |  4  |  5  |   |  6  |  7  |  8  |  9  |  0  | BKSP |
-// | BTCLR| BT1 | BT2 | BT3 | BT4 | BT5 |   | LFT | DWN |  UP | RGT |     |      |
-// | SHFT |     |     |     |     |     |   |     |     |     |     |     |      |
-//                    | GUI |     | SPC |   | ENT |     | ALT |
-                        bindings = <
-   &kp TAB    &kp N1       &kp N2       &kp N3       &kp N4       &kp N5         &kp N6   &kp N7   &kp N8 &kp N9    &kp N0 &kp BSPC
-   &bt BT_CLR &bt BT_SEL 0 &bt BT_SEL 1 &bt BT_SEL 2 &bt BT_SEL 3 &bt BT_SEL 4   &kp LEFT &kp DOWN &kp UP &kp RIGHT &trans &trans
-   &kp LSHFT  &trans       &trans       &trans       &trans       &trans         &trans   &trans   &trans &trans    &trans &trans
-                                    &kp LGUI     &trans       &kp SPACE      &kp RET  &trans   &kp RALT
-                        >;
-                };
-
-                raise_layer {
-// -----------------------------------------------------------------------------------------
-// |  TAB |  !  |  @  |  #  |  $  |  %  |   |  ^  |  &  |  *  |  (  |  )  | BKSP |
-// | CTRL |     |     |     |     |     |   |  -  |  =  |  [  |  ]  |  \  |  `   |
-// | SHFT |     |     |     |     |     |   |  _  |  +  |  {  |  }  | "|" |  ~   |
-//                    | GUI |     | SPC |   | ENT |     | ALT |
-                        bindings = <
-   &kp  TAB  &kp EXCL &kp AT &kp HASH &kp DLLR &kp PRCNT   &kp CARET &kp AMPS  &kp ASTRK &kp LPAR &kp RPAR &kp BSPC
-   &kp LCTRL &trans   &trans &trans   &trans   &trans      &kp MINUS &kp EQUAL &kp LBKT  &kp RBKT &kp BSLH &kp GRAVE
-   &kp LSHFT &trans   &trans &trans   &trans   &trans      &kp UNDER &kp PLUS  &kp LBRC  &kp RBRC &kp PIPE &kp TILDE
-                             &kp LGUI &trans   &kp SPACE   &kp RET   &trans    &kp RALT
-                        >;
-                };
+  chosen {
+    zmk,matrix_transform = &five_column_transform;
+  };
+};
+/ {
+    conditional_layers {
+        compatible = "zmk,conditional-layers";
+        tri_layer {
+            if-layers = <LOWER RAISE>;
+            then-layer = <FUNCT>;
         };
+    };
+    behaviors {
+      // NORMAL MOD MORPH
+      MOD_MORPH(end_snr,      &kp END,    &snap_right, LRSFT)
+      MOD_MORPH(home_snl,     &kp HOME,   &snap_left, LRSFT)
+      MOD_MORPH(excl_neq,     &kp EXCL,   &neq, LRSFT)
+      MOD_MORPH(gte_shr,      &gte,       &gt_d, LRSFT)
+      MOD_MORPH(lte_shl,      &lte,       &lt_d, LRSFT)
+      MOD_MORPH(peq_meq,      &peq,       &neq, LRSFT)
+      MOD_MORPH(up_hash,      &kp HASH,   &kp UP, LRSFT)
+      MOD_MORPH(rptr_rarr,    &rptr,      &rarr, LRSFT)
+      MOD_MORPH(snake_camel,  &tog SNAKE, &tog CAMEL, LRSFT)
+      MOD_MORPH(kebab_path,   &tog KEBAB, &tog PATH, LRSFT)
+      // DOUBLE MOD MORPH KEYS
+      MM_REPEAT(minus_d,  MINUS)
+      MM_REPEAT(plus_d,   PLUS)
+      MM_REPEAT(col_d,    COLON)
+      MM_REPEAT(eq_d,     EQUAL)
+      MM_REPEAT(pipe_d,   PIPE)
+      MM_REPEAT(and_d,    AMPS)
+      MM_REPEAT(perc_d,   PRCNT)
+      MM_REPEAT(lpar_d,   LPAR)
+      MM_REPEAT(rpar_d,   RPAR)
+      MM_REPEAT(lt_d,     LT)
+      MM_REPEAT(gt_d,     GT)
+      MM_REPEAT(under_d,  UNDER)
+      MM_REPEAT(star_d,   STAR)
+      MM_REPEAT(quote_d,  DQT)
+      MM_REPEAT(caret_d,  CARET)
+      // HOME ROW MODS
+      hl: homerow_mods_left {
+        compatible = "zmk,behavior-hold-tap";
+        label = "HOMEROW_MODS_LEFT";
+        #binding-cells = <2>;
+        flavor = "balanced";
+        tapping-term-ms = <150>;
+        quick-tap-ms = <125>;
+        global-quick-tap;
+        bindings = <&kp>, <&kp>;
+      };
+      hr: homerow_mods_right {
+        compatible = "zmk,behavior-hold-tap";
+        label = "HOMEROW_MODS_RIGHT";
+        #binding-cells = <2>;
+        flavor = "tap-preferred";
+        tapping-term-ms = <200>;
+        quick-tap-ms = <125>;
+        require-prior-idle-ms = <200>;
+        global-quick-tap;
+        bindings = <&kp>, <&kp>;
+      };
+    };
+};
+/ {
+    macros {
+      MACRO(snap_left,
+        RELEASE(&kp LSHFT),
+        RELEASE(&kp RSHFT),
+        PRESS(&kp LALT),
+        PRESS(&kp LGUI),
+        TAP(&kp LEFT),
+        RELEASE(&kp LALT),
+        RELEASE(&kp LGUI)
+      )
+      MACRO(snap_right,
+        RELEASE(&kp LSHFT),
+        RELEASE(&kp RSHFT),
+        PRESS(&kp LALT),
+        PRESS(&kp LGUI),
+        TAP(&kp RIGHT),
+        RELEASE(&kp LALT),
+        RELEASE(&kp LGUI)
+      )
+      MACRO(desk_left,
+        RELEASE(&kp LSHFT),
+        RELEASE(&kp RSHFT),
+        PRESS(&kp LCTRL),
+        TAP(&kp LEFT),
+        RELEASE(&kp LCTRL)  
+      )
+      MACRO(desk_right,
+        RELEASE(&kp LSHFT),
+        RELEASE(&kp RSHFT),
+        PRESS(&kp LCTRL),
+        TAP(&kp RIGHT),
+        RELEASE(&kp LCTRL) 
+      )
+      MACRO(lte,
+        TAP(&kp LT),
+        TAP(&kp EQUAL)
+      )
+      MACRO(rptr,
+        RELEASE(&kp LSFT),
+        TAP(&kp MINUS),
+        TAP(&kp GT)
+      )
+      MACRO(gte,
+        TAP(&kp GT),
+        TAP(&kp EQUAL)
+      )
+      MACRO(neq,
+        RELEASE(&kp LSHFT),
+        RELEASE(&kp RSHFT),
+        TAP(&kp EXCL),
+        TAP(&kp EQUAL)
+      )
+      MACRO(peq,
+        TAP(&kp PLUS),
+        TAP(&kp EQUAL)
+      )
+      MACRO(meq,
+        RELEASE(&kp LSHFT),
+        RELEASE(&kp RSHFT),
+        TAP(&kp MINUS),
+        TAP(&kp EQUAL)
+      )
+      MACRO(ellipses, 
+        TAP(&kp DOT),
+        TAP(&kp DOT),
+        TAP(&kp DOT)
+      )
+      MACRO(rarr,
+        RELEASE(&kp LSFT),
+        RELEASE(&kp RSFT),
+        TAP(&kp EQUAL),
+        TAP(&kp GT)
+      )
+      // Device switching macros
+      MACRO(to_mac1,
+        TAP(&to MAC),
+        TAP(&bt BT_SEL 0)
+      )
+      MACRO(to_win,
+        TAP(&to WIN),
+        TAP(&bt BT_SEL 1)
+      )
+      MACRO(to_mac2,
+        TAP(&to MAC),
+        TAP(&bt BT_SEL 2)
+      )
+      repeat_key: repeat_key {
+            label = "repeat-key";
+            compatible = "zmk,behavior-macro-one-param";
+            #binding-cells = <1>;
+            bindings = 
+              RELEASE(&kp LSFT),
+              <&macro_param_1to1>,
+              TAP(&kp MACRO_PLACEHOLDER),
+              <&macro_param_1to1>,
+              TAP(&kp MACRO_PLACEHOLDER);
+        };
+    };
+};
+/ {
+    combos {
+        compatible = "zmk,combos";
+        // GENERAL KEYS
+        COMBO(tilde,        0 1,    &kp TILDE,    MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(grave,        8 9,    &kp GRAVE,    MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0) 
+        COMBO(equal,        1 2,    &eq_d,        MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(plus_d,       2 3,    &plus_d,      MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(home_snl,     10 20,  &home_snl,    MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(end_snr,      19 29,  &end_snr,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(del,          31 32,  &kp DEL,      MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(colon,        33 34,  &col_d,       MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(star,         7 17,   &star_d,      MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(lbrc,         20 21,  &kp LBRC,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(rbkt,         26 27,  &kp RBKT,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(lpar,         21 22,  &kp LPAR,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(rpar,         27 28,  &kp RPAR,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(rptr,         16 26,  &rptr_rarr,   MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(lte,          17 27,  &lte_shl,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(gte,          18 28,  &gte_shr,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(left,         11 21,  &kp LEFT,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(up,           2 12,   &up_hash,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(down,         12 22,  &kp DOWN,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(right,        13 23,  &kp RIGHT,    MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(pipe,         3 13,   &pipe_d,      MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(bslh,         8 18,   &kp BSLH,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(excl,         0 10,   &excl_neq,    MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(at,           1 11,   &kp AT,       MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(amps,         6 16,   &and_d,       MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(perc,         4 14,   &perc_d,      MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(caret,        5 15,   &caret_d,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(quote,        9 19,   &quote_d,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        // FAST
+        COMBO(minus,        7 8,    &minus_d,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, FAST_COMBO_TIMEOUT, 25) // lu
+        COMBO(under,        6 7,    &under_d,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, FAST_COMBO_TIMEOUT, 25) // uy
+        COMBO(rbrc,         28 29,  &kp RBRC,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, FAST_COMBO_TIMEOUT, 25) // ./
+        COMBO(lbkt,         22 23,  &kp LBKT,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, FAST_COMBO_TIMEOUT, 25) // cd
+        // NO LOWER
+        COMBO(snake_camel,  14 24,  &snake_camel, MAC WIN SNAKE CAMEL PATH KEBAB,       COMBO_TIMEOUT, 0)
+        COMBO(kebab_path,   15 25,  &kebab_path,  MAC WIN SNAKE CAMEL PATH KEBAB,       COMBO_TIMEOUT, 0)
+        // LOWER ONLY
+        COMBO(b,            25 26,  &kp B,        LOWER,                                COMBO_TIMEOUT, 0)
+        // MAC ONLY
+        COMBO(dt_right,     23 24,  &desk_right,  MAC,                                  COMBO_TIMEOUT, 0)
+        COMBO(dt_left,      25 26,  &desk_left,   MAC,                                  COMBO_TIMEOUT, 0)
+        // Triple combos  
+        COMBO(plus_equal,   1 2 3,  &peq,         MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(minus_equal,  6 7 8,  &meq,         MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(ellipses,     26 27 28, &ellipses,  MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+    };
+};
+/ {
+  keymap {
+   compatible = "zmk,keymap";
+    mac_layer {
+      label = "MAC";
+      // -----------------------------------------------------------------
+      // |  Q  ~  W  =  F  +  P  |  B  |   |  J  |  L  -  U  _  Y  `  '  |
+      // |  A  |  R  |  S  |  T  |  G  |   |  M  |  N  |  E  |  I  \  O  |
+      // |  Z  {  X  (  C  [  D  |  V  |   |  K  |  H  ]  ,  )  .  }  /  |
+      //   | ESC | LWR(TAB) | LSFT(BKSP) |  SPC  |  RSE(;)  | RET |
+      bindings = <
+        &kp Q       &kp W      &kp F      &kp P       &kp B  &kp J &kp L       &kp U      &kp Y      &kp SQT     
+        &hl LSHFT A &hl LALT R &hl LGUI S &hl LCTRL T &kp G  &kp M &hr RCTRL N &hl RGUI E &hr RALT I &hr RSHFT O 
+        &kp Z       &kp X      &kp C      &kp D       &kp V  &kp K &kp H       &kp COMMA  &kp DOT    &kp FSLH    
+        &kp ESC &lt LOWER TAB &mt LSHFT BKSP &kp SPACE &lt RAISE SEMI &mt RSFT RET
+      >;
+    };
+    
+    win_layer {
+      label = "WIN";
+      // -----------------------------------------------------------------
+      // |  Q  ~  W  =  F  +  P  |  B  |   |  J  |  L  -  U  _  Y  `  '  |
+      // |  A  |  R  |  S  |  T  |  G  |   |  M  |  N  |  E  |  I  \  O  |
+      // |  Z  {  X  (  C  [  D  |  V  |   |  K  |  H  ]  ,  )  .  }  /  |
+      //   | ESC | LWR(TAB) | LSFT(BKSP) |  SPC  |  RSE(;)  | RET |
+      bindings = <
+        &kp Q       &kp W      &kp F       &kp P      &kp B  &kp J &kp L       &kp U       &kp Y      &kp SQT     
+        &hl LSHFT A &hl LALT R &hl LCTRL S &hl LGUI T &kp G  &kp M &hr RGUI N  &hl RCTRL E &hr RALT I &hr RSHFT O 
+        &kp Z       &kp X      &kp C       &kp D      &kp V  &kp K &kp H       &kp COMMA   &kp DOT    &kp FSLH    
+        &kp ESC &lt LOWER TAB &mt LSHFT BKSP &kp SPACE &lt RAISE SEMI &mt RSFT RET
+      >;
+    };
+    snake_layer {
+      label = "SNEK";
+      bindings = <
+        &kp LS(Q) &kp LS(W) &kp LS(F) &kp LS(P) &kp LS(B)  &kp LS(J) &kp LS(L) &kp LS(U) &kp LS(Y) &kp SQT     
+        &kp LS(A) &kp LS(R) &kp LS(S) &kp LS(T) &kp LS(G)  &kp LS(M) &kp LS(N) &kp LS(E) &kp LS(I) &kp LS(O) 
+        &kp LS(Z) &kp LS(X) &kp LS(C) &kp LS(D) &kp LS(V)  &kp LS(K) &kp LS(H) &kp COMMA  &kp DOT  &kp FSLH    
+        &tog SNAKE &lt LOWER TAB &kp BKSP &kp UNDER &lt RAISE SEMI &mt RSFT RET
+      >;
+    };
+    CAPS_LAYER("CAML", &sk LSFT, CAMEL)
+    CAPS_LAYER("PATH", &kp FSLH, PATH)
+    CAPS_LAYER("KEB-", &kp MINUS, KEBAB)
+    lower_layer {
+      label = "SYM";
+      // -----------------------------------------------------------------
+      // |  !  |  @  |  #  |  $  |  %  |   |  %  |  &  |  *  |  "  |  '  |
+      // |  1  |  2  |  3  |  4  |  5  |   |  6  |  7  |  8  |  9  |  0  |
+      // |  |  |  ~  |  :  |  `  |  \  |   |  x  |  h  |  ,  |  .  |  /  |
+      //      |  DEL  |  TRANS  |  LGUI  |  BKSP  | MOSPACE |  RET  |
+      bindings = <
+        &kp EXCL  &kp AT    &kp HASH  &kp DLLR  &kp PRCNT  &kp CARET &kp AMPS  &kp STAR  &kp DQT &kp SQT 
+        &kp N1    &kp N2    &kp N3    &kp N4    &kp N5     &kp N6    &kp N7    &kp N8    &kp N9   &kp N0   
+        &kp PIPE  &kp TILDE &kp COLON &kp GRAVE &kp BSLH   &kp X     &kp H     &kp COMMA &kp DOT  &kp FSLH 
+        &kp DEL    &trans   &kp BKSP  &kp SPACE &lt RAISE TAB &kp RET
+      >;
+    };
+
+    raise_layer {
+      label = "NAV";
+      // ------------------------------------------------------------------------
+      // | INS  | BACK |  UP  |  FWD | PGUP |   | BRI+ |  VOL+ | (  |  )  | DEL |
+      // | CAPS | LEFT | DOWN | RGHT | PRSC |   | AUTO |  MUTE | [  |  ]  |  ;  |
+      // | HOME | Z IN | LGUI | ZOUT | PGDN |   | BRI- |  VOL- | {  |  }  | END |
+      //                          |   |   | SHIFT |  |   |
+      bindings = <
+        &kp INS  &kp C_AC_BACK    &kp UP   &kp C_AC_FORWARD  &kp PG_UP &kp C_BRI_UP   &kp C_VOL_UP &kp LPAR &kp RPAR  &kp DEL  
+        &kp CAPS &kp LEFT         &kp DOWN &kp RIGHT         &kp PSCRN &kp C_BRI_AUTO &kp C_MUTE   &kp LBKT &kp RBKT  &kp SEMI 
+        &kp HOME &kp C_AC_ZOOM_IN &kp LGUI &kp C_AC_ZOOM_OUT &kp PG_DN &kp C_BRI_DN   &kp C_VOL_DN &kp LBRC &kp RBRC  &kp END  
+        &trans   &trans           &kp LSHFT                  &trans &trans            &trans
+      >;
+    };
+
+    funct_layer {
+      label = "FUNC";
+      // ------------------------------------------------------------------------
+      // | F1 | F2  | F3  | F4  | B |   | BT1 | BLE     | MAC | EP ON |  LGAME  |
+      // | F5 | F6  | F7  | F8  | G |   | BT2 | OUT TOG | BTP |  XXX  |   BTN   |
+      // | F9 | F10 | F11 | F12 | T |   | BT3 | USB     | WIN | EPOFF | BLE_RST |
+      //            | XXX | XXX | XXX | XXX | XXX | XXX |
+      bindings = <
+        &kp F1 &kp F2  &kp F3  &kp F4  &kp B &to_mac1 &out OUT_BLE &to MAC    &ext_power EP_ON  &tog GAME
+        &kp F5 &kp F6  &kp F7  &kp F8  &kp G &to_win  &out OUT_TOG &bt BT_PRV &none             &bt BT_PRV      
+        &kp F9 &kp F10 &kp F11 &kp F12 &kp T &to_mac2 &out OUT_USB &to WIN    &ext_power EP_OFF &bt BT_CLR     
+        &trans &trans  &trans  &trans  &trans         &trans
+      >;
+    };  
+
+    game_layer {
+      label = "GAME";
+      // ----------------------------------------------------
+      // | ESC   | Q | W | E | R |   | T | 1 | 2 | 3 | GAME |
+      // | LSHFT | A | S | D | G |   | H | 4 | 5 | 6 |  F3  |
+      // | M     | Z | X | C | V |   | B | 7 | 8 | 9 |  F5  |
+      //             | 4 | 3 | SPC | SPC | 0 | ENT |
+      bindings = <
+        &kp TAB   &kp Q &kp W &kp E &kp R  &kp F1 &kp F2 &kp F3  &kp F4  &tog GAME
+        &kp LSHFT &kp A &kp S &kp D &kp F3 &kp F5 &kp F6 &kp F7  &kp F8  &kp C_VOL_UP 
+        &kp LCTRL &kp Z &kp X &kp C &kp F5 &kp B  &kp F9 &kp F10 &kp F11 &kp C_VOL_DN
+        &kp ESC   &lt LOWER TAB     &kp SPACE   &kp SPACE    &kp N0 &kp RET
+      >;
+    };
+  };
 };
