@@ -19,7 +19,7 @@ If you are reviewing these errors in the GitHub Actions tab, they can be found i
 
 ### Keymap Error
 
-If you get an error stating `Keymap node not found, check a keymap is available and is has compatible = "zmk,keymap" set` this is an indication that the build process cannot find the keymap. Double check that the `<keyboard>.keymap` file is present and has been discovered by the build process. This can be checked by looking for a line in the build log stating `-- Using keymap file: /path/to/keymap/file/<keyboard>.keymap`. Inside the keymap file ensure the keymap node has `compatible = zmk,keymap` and it's not misspelled. For more information see the [Keymap](features/keymaps.mdx) and [Config](config/index.md) documentation.
+If you get an error stating `Keymap node not found, check a keymap is available and is has compatible = "zmk,keymap" set` this is an indication that the build process cannot find the keymap. Double check that the `<keyboard>.keymap` file is present and has been discovered by the build process. This can be checked by looking for a line in the build log stating `-- Using keymap file: /path/to/keymap/file/<keyboard>.keymap`. Inside the keymap file ensure the keymap node has `compatible = zmk,keymap` and it's not misspelled. For more information see the [Keymaps](keymaps/index.mdx) and [Config](config/index.md) documentation.
 
 ### Devicetree Errors
 
@@ -58,5 +58,49 @@ Key positions are numbered starting from `0` at the top left key on the keymap, 
 :::
 
 :::tip
-A common mistake that leads to this error is to use [key press keycodes](behaviors/key-press.md) without the leading `&kp` binding. That is, having entries such as `SPACE` that should have been `&kp SPACE`.
+A common mistake that leads to this error is to use [key press keycodes](keymaps/behaviors/key-press.md) without the leading `&kp` binding. That is, having entries such as `SPACE` that should have been `&kp SPACE`.
 :::
+
+## Diagnosing Unexpected Build Results
+
+### Configuration Setting Issues
+
+If you want to ensure that the [configuration settings](../config/index.md#kconfig-files) you intend to change are changed in the build, you can check the final compiled Kconfig file that the firmware build process produces.
+This file will display values for all set configurations and includes user, board, shield (if used in build), ZMK, and Zephyr-level settings.
+
+When using GitHub Actions to build your firmware, the contents of this file are displayed in the "`<keyboard>` Kconfig file" step in your build job:
+
+![](../assets/troubleshooting/building/kconfig-step.png)
+
+If you are building locally, this file can be found inside the build folder at `<build_folder>/zephyr/.config`.
+
+Additionally, the build command (in "West Build (`<keyboard>`)" step in GitHub Actions) logs what configuration files were found and used in the build:
+
+```
++ west build -s zmk/app -d /tmp/tmp.8cJefinXCb -b corneish_zen_v2_left -- -DZMK_CONFIG=/tmp/zmk-config/config -DZMK_EXTRA_MODULES=/__w/zmk-config/zmk-config
+...
+-- ZMK Config Kconfig: /tmp/zmk-config/config/corneish_zen.conf
+...
+```
+
+### Devicetree-related Issues
+
+If you want to ensure that your [devicetree files](../config/index.md#devicetree-files) are processed as you expect, you can check the final compiled devicetree file that the firmware build process produces.
+This file will contain a single devicetree that combines all of user, board, and shield (if used in build) devicetree files.
+Note that while it will include your keymap contents in it, [keycodes](../keymaps/list-of-keycodes.mdx) like `SPACE` will be displayed instead as hexadecimal numbers like `0x7002a`.
+
+When using GitHub Actions to build your firmware, the contents of this file are displayed in the "`<keyboard>` Devicetree file" step in your build job:
+
+![](../assets/troubleshooting/building/devicetree-step.png)
+
+If you are building locally, this file can be found inside the build folder at `<build_folder>/zephyr/zephyr.dts`.
+
+Additionally, the build command (in "West Build (`<keyboard>`)" step in GitHub Actions) logs what devicetree files were found and used in the build:
+
+```
++ west build -s zmk/app -d /tmp/tmp.8cJefinXCb -b corneish_zen_v2_left -- -DZMK_CONFIG=/tmp/zmk-config/config -DZMK_EXTRA_MODULES=/__w/zmk-config/zmk-config
+...
+-- Found BOARD.dts: /tmp/zmk-config/zmk/app/boards/arm/corneish_zen/corneish_zen_v2_left.dts
+-- Found devicetree overlay: /tmp/zmk-config/config/corneish_zen.keymap
+...
+```
