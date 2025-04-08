@@ -18,7 +18,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #include <zmk/wpm.h>
 
-#define WPM_UPDATE_INTERVAL_SECONDS 1
+#define WPM_UPDATE_INTERVAL_SECONDS .5
 #define WPM_RESET_INTERVAL_SECONDS 5
 
 // See https://en.wikipedia.org/wiki/Words_per_minute

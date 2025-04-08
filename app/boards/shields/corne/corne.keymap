@@ -5,6 +5,7 @@
  */
 
 #include <behaviors.dtsi>
+#include <dt-bindings/zmk/pointing.h>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/bt.h>
 #include <dt-bindings/zmk/outputs.h>
@@ -28,6 +29,16 @@
             bindings = <KEY1>, <KEY2>; \
             mods = MODS; \
         };
+
+#define MOD_MORPH_KEEP(NAME, KEY1, KEY2, MODS) NAME: NAME { \
+            compatible = "zmk,behavior-mod-morph"; \
+            label = # NAME; \
+            #binding-cells = <0>; \
+            bindings = <KEY1>, <KEY2>; \
+            mods = MODS; \
+            keep-mods = MODS;\
+        };
+
 #define MM_REPEAT(NAME, KEY) NAME: NAME { \
             compatible = "zmk,behavior-mod-morph"; \
             label = # NAME; \
@@ -94,17 +105,28 @@
         };
     };
     behaviors {
+      // OPTION MOD MORPH
+      MOD_MORPH_KEEP(full_up,    &up_for,    &fullscreen, <MOD_LALT>)
+      // CTRL MOD MORPH
+      MOD_MORPH_KEEP(windows_up, &full_up,   &kp UP,      <MOD_LCTL>)
       // NORMAL MOD MORPH
-      MOD_MORPH(end_snr,      &kp END,    &snap_right, LRSFT)
+      MOD_MORPH(end_snr,      &kp END,    &snap_right,LRSFT)
       MOD_MORPH(home_snl,     &kp HOME,   &snap_left, LRSFT)
-      MOD_MORPH(excl_neq,     &kp EXCL,   &neq, LRSFT)
-      MOD_MORPH(gte_shr,      &gte,       &gt_d, LRSFT)
-      MOD_MORPH(lte_shl,      &lte,       &lt_d, LRSFT)
-      MOD_MORPH(peq_meq,      &peq,       &neq, LRSFT)
-      MOD_MORPH(up_hash,      &kp HASH,   &kp UP, LRSFT)
-      MOD_MORPH(rptr_rarr,    &rptr,      &rarr, LRSFT)
+      MOD_MORPH(excl_neq,     &kp EXCL,   &neq,       LRSFT)
+      MOD_MORPH(gte_shr,      &gte,       &gt_d,      LRSFT)
+      MOD_MORPH(lte_shl,      &lte,       &lt_d,      LRSFT)
+      MOD_MORPH(peq_meq,      &peq,       &neq,       LRSFT)
+      MOD_MORPH(rptr_rarr,    &rptr,      &rarr,      LRSFT)
       MOD_MORPH(snake_camel,  &tog SNAKE, &tog CAMEL, LRSFT)
-      MOD_MORPH(kebab_path,   &tog KEBAB, &tog PATH, LRSFT)
+      MOD_MORPH(right_snap,   &cmd_r,     &snap_right,LRSFT)
+      MOD_MORPH(left_snap,    &cmd_l,     &snap_left, LRSFT)
+      MOD_MORPH(kebab_path,   &tog KEBAB, &tog PATH,  LRSFT)
+      // MOUSE MOD MORPH KEYS
+      MOD_MORPH(left_scrl,    &mkp LCLK,  &msc SCRL_LEFT, LRSFT)
+      MOD_MORPH(right_scrl,   &mkp RCLK,  &msc SCRL_RIGHT,LRSFT)
+      MOD_MORPH(scrl_middle,  &msc SCRL_DOWN, &mkp MCLK,  LRSFT)
+      MOD_MORPH(at_back,      &kp AT,      &mkp MB4,      LRSFT)
+      MOD_MORPH(up_for,       &msc SCRL_UP,&mkp MB5,      LRSFT)
       // DOUBLE MOD MORPH KEYS
       MM_REPEAT(minus_d,  MINUS)
       MM_REPEAT(plus_d,   PLUS)
@@ -147,6 +169,26 @@
 };
 / {
     macros {
+      MACRO(save,
+        PRESS(&kp LGUI),
+        TAP(&kp S),
+        RELEASE(&kp LGUI)
+      )
+      MACRO(fullscreen,
+        PRESS(&kp LGUI),
+        TAP(&kp F),
+        RELEASE(&kp LGUI)
+      )
+      MACRO(cmd_l,
+        PRESS(&kp LGUI),
+        TAP(&kp LEFT),
+        RELEASE(&kp LGUI)
+      )
+      MACRO(cmd_r,
+        PRESS(&kp LGUI),
+        TAP(&kp RIGHT),
+        RELEASE(&kp LGUI)
+      )
       MACRO(snap_left,
         RELEASE(&kp LSHFT),
         RELEASE(&kp RSHFT),
@@ -253,7 +295,7 @@
         COMBO(grave,        8 9,    &kp GRAVE,    MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0) 
         COMBO(equal,        1 2,    &eq_d,        MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(plus_d,       2 3,    &plus_d,      MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
-        COMBO(home_snl,     10 20,  &home_snl,    MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(left_snap,    10 20,  &left_snap,   MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(end_snr,      19 29,  &end_snr,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(del,          31 32,  &kp DEL,      MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(colon,        33 34,  &col_d,       MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
@@ -265,35 +307,40 @@
         COMBO(rptr,         16 26,  &rptr_rarr,   MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(lte,          17 27,  &lte_shl,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(gte,          18 28,  &gte_shr,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
-        COMBO(left,         11 21,  &kp LEFT,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
-        COMBO(up,           2 12,   &up_hash,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
-        COMBO(down,         12 22,  &kp DOWN,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
-        COMBO(right,        13 23,  &kp RIGHT,    MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(lclk,         11 21,  &left_scrl,   MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(scrl_down,    12 22,  &scrl_middle, MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(rclk,         13 23,  &right_scrl,  MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(pipe,         3 13,   &pipe_d,      MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(bslh,         8 18,   &kp BSLH,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(excl,         0 10,   &excl_neq,    MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
-        COMBO(at,           1 11,   &kp AT,       MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(at,           1 11,   &at_back,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(amps,         6 16,   &and_d,       MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(perc,         4 14,   &perc_d,      MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(caret,        5 15,   &caret_d,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(quote,        9 19,   &quote_d,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(left_arrow,   2 11,   &kp LEFT,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(right_arrow,  2 13,   &kp RIGHT,    MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         // FAST
         COMBO(minus,        7 8,    &minus_d,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, FAST_COMBO_TIMEOUT, 25) // lu
         COMBO(under,        6 7,    &under_d,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, FAST_COMBO_TIMEOUT, 25) // uy
         COMBO(rbrc,         28 29,  &kp RBRC,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, FAST_COMBO_TIMEOUT, 25) // ./
         COMBO(lbkt,         22 23,  &kp LBKT,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, FAST_COMBO_TIMEOUT, 25) // cd
         // NO LOWER
-        COMBO(snake_camel,  14 24,  &snake_camel, MAC WIN SNAKE CAMEL PATH KEBAB,       COMBO_TIMEOUT, 0)
-        COMBO(kebab_path,   15 25,  &kebab_path,  MAC WIN SNAKE CAMEL PATH KEBAB,       COMBO_TIMEOUT, 0)
+        COMBO(right_snap,   14 24,  &right_snap,  MAC WIN SNAKE CAMEL PATH KEBAB,       COMBO_TIMEOUT, 0)
+        COMBO(snake_camel,  15 25,  &snake_camel, MAC WIN SNAKE CAMEL PATH KEBAB,       COMBO_TIMEOUT, 0)
         // LOWER ONLY
         COMBO(b,            25 26,  &kp B,        LOWER,                                COMBO_TIMEOUT, 0)
         // MAC ONLY
         COMBO(dt_right,     23 24,  &desk_right,  MAC,                                  COMBO_TIMEOUT, 0)
+        COMBO(windows_up,   2 12,   &windows_up,  MAC,                                  COMBO_TIMEOUT, 0)
         COMBO(dt_left,      25 26,  &desk_left,   MAC,                                  COMBO_TIMEOUT, 0)
-        // Triple combos  
+        // Triple combos
         COMBO(plus_equal,   1 2 3,  &peq,         MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(minus_equal,  6 7 8,  &meq,         MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
         COMBO(ellipses,     26 27 28, &ellipses,  MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(up_arrow,     2 11 13,  &kp UP,     MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(dn_arrow,     11 13 22, &kp DOWN,   MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0)
+        COMBO(save,         11 12 13, &save,      MAC WIN SNAKE CAMEL PATH KEBAB LOWER, COMBO_TIMEOUT, 0) 
     };
 };
 / {

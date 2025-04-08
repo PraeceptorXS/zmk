@@ -10,6 +10,7 @@ features:
   - display
   - underglow
   - studio
+  - pointer
 siblings:
   - corne_left
   - corne_right
